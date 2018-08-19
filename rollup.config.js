@@ -7,7 +7,7 @@ export default {
     input: 'src/index.js',
     external: ['fs', 'path'],
     output: {
-        file: 'dist/rollup-plugin-asset-sync.js',
+        file: 'dist/rollup-plugin-html-bundle.js',
         format: 'cjs'
     },
     plugins: [
