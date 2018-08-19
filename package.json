@@ -11,6 +11,11 @@
     "bundle",
     "inline"
   ],
+  "files": [
+    "src/index.js",
+    "dist/rollup-plugin-html-bundle.js",
+    "dist/rollup-plugin-html-bundle.module.js"
+  ],
   "homepage": "https://github.com/rosenbjerg/rollup-plugin-html-bundle",
   "author": "Malte Rosenbjerg",
   "license": "MIT",
