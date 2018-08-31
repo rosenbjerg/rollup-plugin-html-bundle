@@ -21,29 +21,38 @@ export default function bundle(userOptions = {}) {
     Object.assign(options, userOptions);
     return {
         name: 'html-bundle',
-        onwrite: writeOptions => {
-            const bundle = writeOptions.file;
+        generateBundle: (outputOptions, bundle, isWrite) => {
             return new Promise((accept, reject) => {
-                fs.readFile(path.resolve(options.template), 'utf8', (err, templateContent) => {
-                    if (err) reject(err);
-                    const targetIndex = templateContent.lastIndexOf(`</${options.targetElement}>`);
-                    if (targetIndex === -1) this.error("invalid targetElement");
+                if (!isWrite) return accept();
+                let attr = '', inject = '';
+                if (options.async) attr += ' async';
+                if (options.defer) attr += ' defer';
 
-                    const attr = [(options.async ? 'async' : ''), (options.defer ? 'defer' : '')].join(" ").trim();
-                    let bundledContent;
-                    if (options.inline) {
-                        const script = `<script ${attr}>\n${writeOptions.bundle.code}\n</script>\n`;
-                        bundledContent = templateContent.substr(0, targetIndex) + script + templateContent.substr(targetIndex);
-                    }
-                    else {
-                        const src = path.basename(bundle) + (options.timestamp ? `?v=${Date.now()}` : '');
-                        const script = `<script ${attr} src="${src}"></script>\n`;
-                        bundledContent = templateContent.substr(0, targetIndex) + script + templateContent.substr(targetIndex);
-                    }
-                    fs.writeFile(path.resolve(options.target), bundledContent, err => {
-                        if (err) reject(err);
-                        else accept();
+                fs.readFile(path.resolve(options.template), 'utf8', (err, templateContent) => {
+                    if (err) return reject(err);
+
+                    const targetIndex = templateContent.lastIndexOf(`</${options.targetElement}>`);
+                    if (targetIndex === -1)
+                        return reject("invalid targetElement");
+
+                    Object.values(bundle).forEach(module => {
+                        if (err) {
+                            reject(err);
+                            throw err;
+                        }
+
+                        if (options.inline) {
+                            inject += `<script${attr}>\n${module.code}</script>\n`;
+                        }
+
+                        else {
+                            const src = path.basename(module.fileName) + (options.timestamp ? ("?v=" + (Date.now())) : '');
+                            inject += `<script${attr} src="${src}"></script>\n`;
+                        }
                     });
+
+                    const bundledContent = templateContent.substr(0, targetIndex) + inject + templateContent.substr(targetIndex);
+                    fs.writeFile(path.resolve(options.target), bundledContent, err => err ? reject(err) : accept());
                 });
             })
         },
